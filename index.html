@@ -10,7 +10,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen pb-24">
+<body class="bg-gray-100 min-h-screen pb-32">
 
     <div class="max-w-md mx-auto p-4 space-y-4">
 
@@ -24,8 +24,8 @@
         <input id="amountReceived" type="number" class="w-full h-12 px-3 rounded-xl border"
             placeholder="Amount Received">
 
-        <!-- Summary -->
-        <div class="bg-blue-600 text-white rounded-xl p-4">
+        <!-- SUMMARY -->
+        <div class="bg-blue-600 text-white rounded-2xl p-4">
             <p class="text-sm">Remaining Balance</p>
             <h2 id="balanceDisplay" class="text-3xl font-bold">0</h2>
             <p class="text-sm mt-1">Spent: <span id="spentDisplay">0</span></p>
@@ -34,7 +34,7 @@
             </div>
         </div>
 
-        <!-- Add item -->
+        <!-- ADD ITEM -->
         <div class="relative">
             <div class="flex gap-2">
                 <input id="itemName" class="flex-1 h-12 px-3 rounded-xl border"
@@ -46,63 +46,86 @@
                 </button>
             </div>
 
-            <!-- Suggestions -->
             <ul id="suggestions"
                 class="absolute z-10 w-full bg-white rounded-xl shadow mt-1 hidden max-h-48 overflow-y-auto"></ul>
         </div>
 
         <ul id="itemsList" class="space-y-2"></ul>
 
-        <textarea id="messageBox" class="w-full h-24 p-3 rounded-xl border" readonly></textarea>
+    </div>
 
-        <button onclick="generateAndSend()"
-            class="fixed bottom-6 right-6 bg-blue-600 text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-2">
-            <span class="material-icons-round">whatsapp</span>
-            Send Report
-        </button>
+    <!-- CREATE REPORT BUTTON -->
+    <button onclick="createReport()"
+        class="fixed bottom-6 right-6 bg-blue-600 text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-2 text-lg">
+        <span class="material-icons-round">description</span>
+        Create Report
+    </button>
 
+    <!-- LOADING -->
+    <div id="loadingScreen" class="fixed inset-0 bg-white flex flex-col items-center justify-center hidden z-50">
+        <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 text-gray-600">Preparing report...</p>
+    </div>
+
+    <!-- MODAL PREVIEW -->
+    <div id="previewModal" class="fixed inset-0 bg-black/40 hidden z-50 flex justify-center items-end md:items-center">
+
+        <div class="bg-white w-full md:max-w-md rounded-t-3xl md:rounded-3xl p-4 animate-slide-up">
+
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-bold">Expense Report</h2>
+                <button onclick="closePreview()">
+                    <span class="material-icons-round text-gray-500">close</span>
+                </button>
+            </div>
+
+            <!-- Cards -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-blue-50 rounded-xl p-3">
+                    <p class="text-xs text-gray-500">Total Received</p>
+                    <p id="pTotal" class="font-bold text-lg"></p>
+                </div>
+                <div class="bg-red-50 rounded-xl p-3">
+                    <p class="text-xs text-gray-500">Total Spent</p>
+                    <p id="pSpent" class="font-bold text-lg"></p>
+                </div>
+                <div class="bg-green-50 rounded-xl p-3 col-span-2">
+                    <p class="text-xs text-gray-500">Remaining Balance</p>
+                    <p id="pBalance" class="font-bold text-xl"></p>
+                </div>
+            </div>
+
+            <!-- Items -->
+            <div class="space-y-2 max-h-64 overflow-y-auto mb-4" id="previewItems"></div>
+
+            <!-- Send -->
+            <button onclick="sendToWhatsApp()"
+                class="w-full bg-green-500 text-white py-4 rounded-xl text-lg flex items-center justify-center gap-2">
+                <span class="material-icons-round">whatsapp</span>
+                Send Report
+            </button>
+        </div>
     </div>
 
     <script>
-        /* =============================
-           SMART LEARNING AUTOCOMPLETE
-        ============================= */
-
-        // Default food & daily items
-        const defaultItems = [
-            "nyanya", "viazi", "vitunguu", "nyama", "meat", "milk", "maziwa",
-            "cabbage", "sukuma", "rice", "beans", "unga", "eggs", "mayai",
-            "salt", "sugar", "mafuta", "cooking oil",
-            "soap", "sabuni", "soldier", "gate", "guard", "zucchini", "cogette"
-        ];
-
-        let learnedItems = JSON.parse(localStorage.getItem("learnedItems")) || {};
-        defaultItems.forEach(i => learnedItems[i] ??= 1);
-
-        function saveLearned() {
-            localStorage.setItem("learnedItems", JSON.stringify(learnedItems));
-        }
-
-        /* =============================
-           EXPENSE LOGIC
-        ============================= */
-
+        /* ================= DATA ================= */
         let items = JSON.parse(localStorage.getItem("items")) || [];
         let spent = JSON.parse(localStorage.getItem("spent")) || 0;
+        let learnedItems = JSON.parse(localStorage.getItem("learnedItems")) || {};
 
         render();
 
+        /* ================= ITEMS ================= */
         function addItem() {
             const name = itemName.value.trim().toLowerCase();
             const price = Number(itemPrice.value);
-
             if (!name || price <= 0) return;
 
             items.push({ name, price });
             spent += price;
 
             learnedItems[name] = (learnedItems[name] || 0) + 1;
-            saveLearned();
 
             itemName.value = "";
             itemPrice.value = "";
@@ -112,26 +135,24 @@
             render();
         }
 
-        function deleteItem(index) {
-            spent -= items[index].price;
-            items.splice(index, 1);
+        function deleteItem(i) {
+            spent -= items[i].price;
+            items.splice(i, 1);
             save();
             render();
         }
 
         function render() {
             itemsList.innerHTML = "";
-            items.forEach((item, i) => {
-                const li = document.createElement("li");
-                li.className = "bg-white p-3 rounded-xl shadow flex justify-between";
-                li.innerHTML = `
-      <span>${item.name} - <b>${item.price}</b></span>
-      <button onclick="deleteItem(${i})" class="text-red-500">
-        <span class="material-icons-round">delete</span>
-      </button>`;
-                itemsList.appendChild(li);
+            items.forEach((it, i) => {
+                itemsList.innerHTML += `
+      <li class="bg-white p-3 rounded-xl shadow flex justify-between">
+        <span>${it.name} - <b>${it.price}</b></span>
+        <button onclick="deleteItem(${i})" class="text-red-500">
+          <span class="material-icons-round">delete</span>
+        </button>
+      </li>`;
             });
-
             updateSummary();
         }
 
@@ -145,54 +166,50 @@
         function save() {
             localStorage.setItem("items", JSON.stringify(items));
             localStorage.setItem("spent", JSON.stringify(spent));
+            localStorage.setItem("learnedItems", JSON.stringify(learnedItems));
         }
 
-        function generateAndSend() {
+        /* ================= REPORT FLOW ================= */
+        function createReport() {
+            if (!items.length) return;
+            loadingScreen.classList.remove("hidden");
+
+            setTimeout(() => {
+                loadingScreen.classList.add("hidden");
+                showPreview();
+            }, 1200);
+        }
+
+        function showPreview() {
+            const total = Number(amountReceived.value) || 0;
+            pTotal.textContent = total;
+            pSpent.textContent = spent;
+            pBalance.textContent = total - spent;
+
+            previewItems.innerHTML = "";
+            items.forEach(i => {
+                previewItems.innerHTML += `
+      <div class="bg-gray-50 rounded-xl p-3 flex justify-between">
+        <span>${i.name}</span>
+        <b>${i.price}</b>
+      </div>`;
+            });
+
+            previewModal.classList.remove("hidden");
+        }
+
+        function closePreview() {
+            previewModal.classList.add("hidden");
+        }
+
+        function sendToWhatsApp() {
             const number = whatsappNumber.value.replace(/\D/g, "");
             let msg = "RIPOTI YA MATUMIZI\n\n";
             items.forEach(i => msg += `${i.name}: ${i.price}\n`);
             msg += `\nJumla: ${spent}`;
             msg += `\nImebaki: ${(Number(amountReceived.value) || 0) - spent}`;
-
-            messageBox.value = msg;
             window.open(`https://wa.me/${number}?text=${encodeURIComponent(msg)}`);
         }
-
-        /* =============================
-           AUTOCOMPLETE UI
-        ============================= */
-
-        itemName.addEventListener("input", () => {
-            const q = itemName.value.toLowerCase();
-            if (!q) return hideSuggestions();
-
-            const matches = Object.keys(learnedItems)
-                .filter(i => i.includes(q))
-                .sort((a, b) => learnedItems[b] - learnedItems[a])
-                .slice(0, 6);
-
-            suggestions.innerHTML = "";
-            matches.forEach(m => {
-                const li = document.createElement("li");
-                li.className = "px-4 py-2 hover:bg-gray-100 cursor-pointer";
-                li.textContent = m;
-                li.onclick = () => {
-                    itemName.value = m;
-                    hideSuggestions();
-                };
-                suggestions.appendChild(li);
-            });
-
-            suggestions.classList.toggle("hidden", matches.length === 0);
-        });
-
-        function hideSuggestions() {
-            suggestions.classList.add("hidden");
-        }
-
-        document.addEventListener("click", e => {
-            if (!e.target.closest("#itemName")) hideSuggestions();
-        });
     </script>
 
 </body>
