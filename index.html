@@ -3,215 +3,485 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Daily Expenses</title>
 
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                extend: {
+                    colors: {
+                        primary: '#6366f1', // Indigo
+                        accent: '#8b5cf6', // Violet
+                        dark: '#0f172a',   // Slate 900
+                        card: '#1e293b',   // Slate 800
+                    },
+                    animation: {
+                        'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'pop': 'pop 0.2s ease-out',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)' },
+                            '100%': { transform: 'translateY(0)' },
+                        },
+                        pop: {
+                            '0%': { transform: 'scale(0.95)', opacity: '0.5' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: white;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen pb-32">
+<body class="antialiased min-h-screen pb-32">
 
-    <div class="max-w-md mx-auto p-4 space-y-4">
+    <!-- HEADER -->
+    <div
+        class="sticky top-0 z-30 bg-dark/80 backdrop-blur-md px-6 py-4 flex justify-between items-center border-b border-white/5">
+        <div>
+            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Daily Tracker</p>
+            <h1 class="text-xl font-bold gradient-text">Expense Manager</h1>
+        </div>
+        <div
+            class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 shadow-lg">
+            <span class="material-icons-round text-primary">account_circle</span>
+        </div>
+    </div>
 
-        <h1 class="text-xl font-bold flex items-center gap-2">
-            <span class="material-icons-round text-blue-600">account_balance_wallet</span>
-            Daily Expense
-        </h1>
+    <div class="max-w-md mx-auto p-5 space-y-6">
 
-        <input id="whatsappNumber" class="w-full h-12 px-3 rounded-xl border" value="+254762634893">
-
-        <input id="amountReceived" type="number" class="w-full h-12 px-3 rounded-xl border"
-            placeholder="Amount Received">
-
-        <!-- SUMMARY -->
-        <div class="bg-blue-600 text-white rounded-2xl p-4">
-            <p class="text-sm">Remaining Balance</p>
-            <h2 id="balanceDisplay" class="text-3xl font-bold">0</h2>
-            <p class="text-sm mt-1">Spent: <span id="spentDisplay">0</span></p>
-            <div class="h-2 bg-white/30 rounded mt-3 overflow-hidden">
-                <div id="progressBar" class="h-full bg-green-400 w-0 transition-all duration-700"></div>
+        <!-- CONFIG CARD -->
+        <div class="glass rounded-3xl p-1 shadow-lg">
+            <div class="bg-slate-900/50 rounded-[20px] p-4 space-y-3">
+                <div class="relative">
+                    <span class="material-icons-round absolute left-3 top-3.5 text-slate-500">contact_phone</span>
+                    <input id="whatsappNumber"
+                        class="w-full bg-slate-800 text-white pl-10 pr-4 py-3 rounded-xl border border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                        value="+254762634893">
+                </div>
+                <div class="relative">
+                    <span
+                        class="material-icons-round absolute left-3 top-3.5 text-slate-500">account_balance_wallet</span>
+                    <input id="amountReceived" type="number"
+                        class="w-full bg-slate-800 text-white pl-10 pr-4 py-3 rounded-xl border border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                        placeholder="Total Cash Received">
+                </div>
             </div>
         </div>
 
-        <!-- ADD ITEM -->
-        <div class="relative">
-            <div class="flex gap-2">
-                <input id="itemName" class="flex-1 h-12 px-3 rounded-xl border"
-                    placeholder="Andika kitu... (nyanya, viazi)">
-                <input id="itemPrice" type="number" class="w-24 h-12 px-3 rounded-xl border" placeholder="Price">
+        <!-- MAIN BALANCE CARD -->
+        <div class="relative overflow-hidden rounded-3xl p-6 shadow-2xl animate-fade-in group">
+            <div
+                class="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-700 transition-all duration-500 group-hover:scale-105">
+            </div>
+            <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+
+            <div class="relative z-10">
+                <p class="text-indigo-100 text-sm font-medium">Remaining Balance</p>
+                <div class="flex items-baseline gap-1 mt-1">
+                    <span class="text-3xl font-bold" id="balanceDisplay">0</span>
+                    <span class="text-sm font-medium opacity-70">KES</span>
+                </div>
+
+                <div class="mt-4 flex justify-between items-end">
+                    <div>
+                        <p class="text-xs text-indigo-200 uppercase tracking-widest">Total Spent</p>
+                        <p class="text-lg font-bold" id="spentDisplay">0</p>
+                    </div>
+                    <div class="h-10 w-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                        <span class="material-icons-round text-white">analytics</span>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mt-4 h-1.5 bg-black/20 rounded-full overflow-hidden">
+                    <div id="progressBar"
+                        class="h-full bg-green-400 w-0 transition-all duration-1000 shadow-[0_0_10px_rgba(74,222,128,0.7)]">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADD ITEM SECTION -->
+        <div class="space-y-3">
+            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider ml-1">New Transaction</h3>
+            <div class="flex gap-2 relative z-20">
+                <div class="relative flex-1 group">
+                    <input id="itemName"
+                        class="w-full bg-card h-14 pl-4 pr-4 rounded-2xl border border-slate-700 focus:border-accent outline-none text-white transition-all placeholder:text-slate-500"
+                        placeholder="Item Name">
+
+                    <!-- Suggestions Dropdown -->
+                    <ul id="suggestions"
+                        class="absolute top-full left-0 w-full bg-slate-800 border border-slate-700 rounded-xl mt-2 shadow-2xl hidden overflow-hidden z-30 max-h-40 overflow-y-auto">
+                    </ul>
+                </div>
+
+                <input id="itemPrice" type="number"
+                    class="w-24 bg-card h-14 px-3 rounded-2xl border border-slate-700 focus:border-accent outline-none text-white text-center font-bold"
+                    placeholder="0.00">
+
                 <button onclick="addItem()"
-                    class="h-12 w-12 bg-blue-600 text-white rounded-xl flex items-center justify-center">
+                    class="h-14 w-14 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white shadow-lg active:scale-90 transition-transform hover:shadow-purple-500/30">
                     <span class="material-icons-round">add</span>
                 </button>
             </div>
-
-            <ul id="suggestions"
-                class="absolute z-10 w-full bg-white rounded-xl shadow mt-1 hidden max-h-48 overflow-y-auto"></ul>
         </div>
 
-        <ul id="itemsList" class="space-y-2"></ul>
+        <!-- CURRENT ITEMS LIST -->
+        <div class="space-y-3">
+            <div class="flex justify-between items-center px-1">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Current Items</h3>
+                <span id="itemCount" class="bg-slate-800 text-xs px-2 py-0.5 rounded text-slate-400">0</span>
+            </div>
+            <ul id="itemsList" class="space-y-3 pb-4">
+                <div class="text-center py-8 text-slate-600 italic text-sm">No items added yet...</div>
+            </ul>
+        </div>
+
+        <!-- HISTORY SECTION (NEW) -->
+        <div class="pt-6 border-t border-slate-800">
+            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <span class="material-icons-round text-base">history</span> History Logs
+            </h3>
+
+            <div id="historyList" class="grid grid-cols-1 gap-3">
+                <!-- History items injected here -->
+            </div>
+        </div>
 
     </div>
 
-    <!-- CREATE REPORT BUTTON -->
-    <button onclick="createReport()"
-        class="fixed bottom-6 right-6 bg-blue-600 text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-2 text-lg">
-        <span class="material-icons-round">description</span>
-        Create Report
+    <!-- SAVE FLOATING BUTTON -->
+    <button onclick="saveCurrentReport()"
+        class="fixed bottom-6 right-6 z-40 bg-white text-indigo-900 px-6 py-4 rounded-full shadow-[0_10px_40px_-10px_rgba(255,255,255,0.4)] flex items-center gap-3 font-bold text-lg active:scale-95 transition-all animate-pop">
+        <span class="material-icons-round">save_alt</span>
+        Finish & Save
     </button>
 
-    <!-- LOADING -->
-    <div id="loadingScreen" class="fixed inset-0 bg-white flex flex-col items-center justify-center hidden z-50">
-        <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 text-gray-600">Preparing report...</p>
-    </div>
+    <!-- FULL SIZE DETAIL MODAL -->
+    <div id="detailModal" class="fixed inset-0 z-50 bg-dark hidden">
+        <div class="h-full w-full overflow-y-auto bg-dark animate-slide-up flex flex-col">
 
-    <!-- MODAL PREVIEW -->
-    <div id="previewModal" class="fixed inset-0 bg-black/40 hidden z-50 flex justify-center items-end md:items-center">
+            <!-- Modal Header -->
+            <div
+                class="sticky top-0 bg-dark/90 backdrop-blur-md px-6 py-4 border-b border-slate-800 flex justify-between items-center z-10">
+                <button onclick="closeModal()"
+                    class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center">
+                    <span class="material-icons-round text-white">arrow_back</span>
+                </button>
+                <h2 class="text-lg font-bold">Report Details</h2>
+                <div class="w-10"></div> <!-- Spacer -->
+            </div>
 
-        <div class="bg-white w-full md:max-w-md rounded-t-3xl md:rounded-3xl p-4 animate-slide-up">
+            <!-- Modal Content -->
+            <div class="p-6 space-y-6 flex-1">
 
-            <!-- Header -->
-            <div class="flex justify-between items-center mb-3">
-                <h2 class="text-lg font-bold">Expense Report</h2>
-                <button onclick="closePreview()">
-                    <span class="material-icons-round text-gray-500">close</span>
+                <div class="text-center space-y-1">
+                    <p class="text-slate-400 text-sm" id="modalDate">Date</p>
+                    <h1 class="text-3xl font-bold text-white" id="modalTotal">0</h1>
+                    <p class="text-xs text-slate-500 uppercase tracking-widest">Total Received</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                        <p class="text-xs text-slate-400">Spent</p>
+                        <p class="text-xl font-bold text-red-400" id="modalSpent">0</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                        <p class="text-xs text-slate-400">Balance</p>
+                        <p class="text-xl font-bold text-green-400" id="modalBalance">0</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/50 rounded-3xl p-1">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest p-4">Item Breakdown</h3>
+                    <div id="modalItems" class="space-y-1 p-2"></div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-6 bg-dark border-t border-slate-800">
+                <button onclick="sendModalToWhatsApp()"
+                    class="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 transition-all active:scale-95">
+                    <span class="material-icons-round">whatsapp</span>
+                    Send to WhatsApp
                 </button>
             </div>
-
-            <!-- Cards -->
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="bg-blue-50 rounded-xl p-3">
-                    <p class="text-xs text-gray-500">Total Received</p>
-                    <p id="pTotal" class="font-bold text-lg"></p>
-                </div>
-                <div class="bg-red-50 rounded-xl p-3">
-                    <p class="text-xs text-gray-500">Total Spent</p>
-                    <p id="pSpent" class="font-bold text-lg"></p>
-                </div>
-                <div class="bg-green-50 rounded-xl p-3 col-span-2">
-                    <p class="text-xs text-gray-500">Remaining Balance</p>
-                    <p id="pBalance" class="font-bold text-xl"></p>
-                </div>
-            </div>
-
-            <!-- Items -->
-            <div class="space-y-2 max-h-64 overflow-y-auto mb-4" id="previewItems"></div>
-
-            <!-- Send -->
-            <button onclick="sendToWhatsApp()"
-                class="w-full bg-green-500 text-white py-4 rounded-xl text-lg flex items-center justify-center gap-2">
-                <span class="material-icons-round">whatsapp</span>
-                Send Report
-            </button>
         </div>
     </div>
 
     <script>
-        /* ================= DATA ================= */
-        let items = JSON.parse(localStorage.getItem("items")) || [];
-        let spent = JSON.parse(localStorage.getItem("spent")) || 0;
-        let learnedItems = JSON.parse(localStorage.getItem("learnedItems")) || {};
+        /* ================= DATA & STATE ================= */
+        let currentItems = JSON.parse(localStorage.getItem("currentItems")) || [];
+        let history = JSON.parse(localStorage.getItem("reportHistory")) || [];
 
-        render();
+        // Use a set for suggestions to avoid duplicates
+        let suggestions = new Set(JSON.parse(localStorage.getItem("suggestions")) || []);
 
-        /* ================= ITEMS ================= */
+        /* ================= DOM ELEMENTS ================= */
+        const els = {
+            whatsapp: document.getElementById('whatsappNumber'),
+            received: document.getElementById('amountReceived'),
+            balance: document.getElementById('balanceDisplay'),
+            spent: document.getElementById('spentDisplay'),
+            progress: document.getElementById('progressBar'),
+            nameIn: document.getElementById('itemName'),
+            priceIn: document.getElementById('itemPrice'),
+            list: document.getElementById('itemsList'),
+            suggBox: document.getElementById('suggestions'),
+            historyList: document.getElementById('historyList'),
+            modal: document.getElementById('detailModal'),
+
+            // Modal fields
+            mDate: document.getElementById('modalDate'),
+            mTotal: document.getElementById('modalTotal'),
+            mSpent: document.getElementById('modalSpent'),
+            mBalance: document.getElementById('modalBalance'),
+            mItems: document.getElementById('modalItems')
+        };
+
+        let activeReport = null; // Stores data for the modal
+
+        /* ================= INIT ================= */
+        renderCurrent();
+        renderHistory();
+
+        /* ================= LOGIC: CURRENT SESSION ================= */
         function addItem() {
-            const name = itemName.value.trim().toLowerCase();
-            const price = Number(itemPrice.value);
-            if (!name || price <= 0) return;
+            const name = els.nameIn.value.trim();
+            const price = Number(els.priceIn.value);
 
-            items.push({ name, price });
-            spent += price;
+            if (!name || price <= 0) {
+                // Shake effect logic could go here
+                return;
+            }
 
-            learnedItems[name] = (learnedItems[name] || 0) + 1;
+            currentItems.push({ name, price, id: Date.now() });
 
-            itemName.value = "";
-            itemPrice.value = "";
-            hideSuggestions();
+            // Add to suggestions
+            suggestions.add(name);
+            localStorage.setItem("suggestions", JSON.stringify([...suggestions]));
 
-            save();
-            render();
+            els.nameIn.value = "";
+            els.priceIn.value = "";
+            els.suggBox.classList.add("hidden");
+
+            saveCurrentState();
+            renderCurrent();
         }
 
-        function deleteItem(i) {
-            spent -= items[i].price;
-            items.splice(i, 1);
-            save();
-            render();
+        function deleteItem(id) {
+            currentItems = currentItems.filter(i => i.id !== id);
+            saveCurrentState();
+            renderCurrent();
         }
 
-        function render() {
-            itemsList.innerHTML = "";
-            items.forEach((it, i) => {
-                itemsList.innerHTML += `
-      <li class="bg-white p-3 rounded-xl shadow flex justify-between">
-        <span>${it.name} - <b>${it.price}</b></span>
-        <button onclick="deleteItem(${i})" class="text-red-500">
-          <span class="material-icons-round">delete</span>
-        </button>
-      </li>`;
+        function saveCurrentState() {
+            localStorage.setItem("currentItems", JSON.stringify(currentItems));
+        }
+
+        function renderCurrent() {
+            const total = Number(els.received.value) || 0;
+            const spent = currentItems.reduce((sum, i) => sum + i.price, 0);
+
+            els.spent.textContent = spent.toLocaleString();
+            els.balance.textContent = (total - spent).toLocaleString();
+
+            const pct = total === 0 ? 0 : Math.min((spent / total) * 100, 100);
+            els.progress.style.width = `${pct}%`;
+            els.progress.className = `h-full transition-all duration-1000 shadow-[0_0_10px_rgba(255,255,255,0.5)] ${pct > 90 ? 'bg-red-500' : 'bg-green-400'}`;
+
+            if (currentItems.length === 0) {
+                els.list.innerHTML = '<div class="text-center py-8 text-slate-600 italic text-sm">No items added yet...</div>';
+            } else {
+                els.list.innerHTML = currentItems.map(item => `
+                    <li class="bg-slate-800 p-4 rounded-2xl flex justify-between items-center border border-slate-700 animate-pop">
+                        <div class="flex items-center gap-3">
+                            <div class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-400">
+                                ${item.name.charAt(0).toUpperCase()}
+                            </div>
+                            <span class="font-medium text-slate-200">${item.name}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-white">${item.price}</span>
+                            <button onclick="deleteItem(${item.id})" class="text-red-400 hover:text-red-300">
+                                <span class="material-icons-round text-sm">close</span>
+                            </button>
+                        </div>
+                    </li>
+                `).join('');
+            }
+        }
+
+        // Suggestions Logic
+        els.nameIn.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            if (!val) {
+                els.suggBox.classList.add('hidden');
+                return;
+            }
+            const matches = [...suggestions].filter(s => s.toLowerCase().includes(val));
+            if (matches.length > 0) {
+                els.suggBox.innerHTML = matches.map(s => `
+                    <li onclick="selectSuggestion('${s}')" class="px-4 py-3 hover:bg-slate-700 cursor-pointer text-slate-300 border-b border-slate-700 last:border-0 transition-colors">${s}</li>
+                `).join('');
+                els.suggBox.classList.remove('hidden');
+            } else {
+                els.suggBox.classList.add('hidden');
+            }
+        });
+
+        window.selectSuggestion = (val) => {
+            els.nameIn.value = val;
+            els.suggBox.classList.add('hidden');
+            els.priceIn.focus();
+        };
+
+        // Update calculations on input change
+        els.received.addEventListener('input', renderCurrent);
+
+
+        /* ================= LOGIC: HISTORY SYSTEM ================= */
+
+        function saveCurrentReport() {
+            if (currentItems.length === 0) return alert("Add items first!");
+            const totalRec = Number(els.received.value) || 0;
+            const spent = currentItems.reduce((sum, i) => sum + i.price, 0);
+
+            const report = {
+                id: Date.now(),
+                date: new Date().toLocaleString(),
+                totalReceived: totalRec,
+                totalSpent: spent,
+                balance: totalRec - spent,
+                items: [...currentItems]
+            };
+
+            // Add to history
+            history.unshift(report); // Add to top
+            localStorage.setItem("reportHistory", JSON.stringify(history));
+
+            // Clear current
+            currentItems = [];
+            els.received.value = "";
+            saveCurrentState();
+            renderCurrent();
+            renderHistory();
+
+            // Open the modal for the new item immediately
+            openModal(report.id);
+        }
+
+        function renderHistory() {
+            if (history.length === 0) {
+                els.historyList.innerHTML = '<div class="text-slate-600 text-sm text-center py-4">No saved reports found.</div>';
+                return;
+            }
+
+            els.historyList.innerHTML = history.map(h => `
+                <div onclick="openModal(${h.id})" class="bg-card p-4 rounded-2xl border border-slate-700 hover:border-primary transition-all cursor-pointer active:scale-98">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">${h.date}</p>
+                            <p class="text-sm font-bold text-white mt-1">${h.items.length} Items Recorded</p>
+                        </div>
+                        <span class="material-icons-round text-slate-600">chevron_right</span>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                         <span class="bg-red-500/10 text-red-400 text-xs px-2 py-1 rounded font-mono">-${h.totalSpent}</span>
+                         <span class="bg-green-500/10 text-green-400 text-xs px-2 py-1 rounded font-mono">bal: ${h.balance}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /* ================= LOGIC: MODAL & WHATSAPP ================= */
+
+        window.openModal = (id) => {
+            activeReport = history.find(h => h.id === id);
+            if (!activeReport) return;
+
+            // Populate Modal
+            els.mDate.textContent = activeReport.date;
+            els.mTotal.textContent = activeReport.totalReceived.toLocaleString();
+            els.mSpent.textContent = activeReport.totalSpent.toLocaleString();
+            els.mBalance.textContent = activeReport.balance.toLocaleString();
+
+            els.mItems.innerHTML = activeReport.items.map(i => `
+                <div class="flex justify-between p-3 bg-slate-700/50 rounded-xl mb-1">
+                    <span class="text-slate-300">${i.name}</span>
+                    <span class="font-bold text-white">${i.price}</span>
+                </div>
+            `).join('');
+
+            els.modal.classList.remove('hidden');
+        };
+
+        window.closeModal = () => {
+            els.modal.classList.add('hidden');
+        };
+
+        window.sendModalToWhatsApp = () => {
+            if (!activeReport) return;
+            const number = els.whatsapp.value.replace(/\D/g, "");
+
+            let msg = `*📅 REPORT: ${activeReport.date}*\n`;
+            msg += `------------------\n`;
+            activeReport.items.forEach(i => {
+                msg += `▫️ ${i.name}: ${i.price}\n`;
             });
-            updateSummary();
-        }
+            msg += `------------------\n`;
+            msg += `💰 Rec: ${activeReport.totalReceived}\n`;
+            msg += `📉 Spent: ${activeReport.totalSpent}\n`;
+            msg += `✅ Bal: ${activeReport.balance}`;
 
-        function updateSummary() {
-            const total = Number(amountReceived.value) || 0;
-            spentDisplay.textContent = spent;
-            balanceDisplay.textContent = total - spent;
-            progressBar.style.width = total ? Math.min(spent / total * 100, 100) + "%" : "0%";
-        }
-
-        function save() {
-            localStorage.setItem("items", JSON.stringify(items));
-            localStorage.setItem("spent", JSON.stringify(spent));
-            localStorage.setItem("learnedItems", JSON.stringify(learnedItems));
-        }
-
-        /* ================= REPORT FLOW ================= */
-        function createReport() {
-            if (!items.length) return;
-            loadingScreen.classList.remove("hidden");
-
-            setTimeout(() => {
-                loadingScreen.classList.add("hidden");
-                showPreview();
-            }, 1200);
-        }
-
-        function showPreview() {
-            const total = Number(amountReceived.value) || 0;
-            pTotal.textContent = total;
-            pSpent.textContent = spent;
-            pBalance.textContent = total - spent;
-
-            previewItems.innerHTML = "";
-            items.forEach(i => {
-                previewItems.innerHTML += `
-      <div class="bg-gray-50 rounded-xl p-3 flex justify-between">
-        <span>${i.name}</span>
-        <b>${i.price}</b>
-      </div>`;
-            });
-
-            previewModal.classList.remove("hidden");
-        }
-
-        function closePreview() {
-            previewModal.classList.add("hidden");
-        }
-
-        function sendToWhatsApp() {
-            const number = whatsappNumber.value.replace(/\D/g, "");
-            let msg = "RIPOTI YA MATUMIZI\n\n";
-            items.forEach(i => msg += `${i.name}: ${i.price}\n`);
-            msg += `\nJumla: ${spent}`;
-            msg += `\nImebaki: ${(Number(amountReceived.value) || 0) - spent}`;
             window.open(`https://wa.me/${number}?text=${encodeURIComponent(msg)}`);
-        }
-    </script>
+        };
 
+    </script>
 </body>
 
 </html>
