@@ -22,28 +22,27 @@
                 fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
                 extend: {
                     colors: {
-                        primary: '#6366f1', // Indigo
-                        accent: '#8b5cf6', // Violet
-                        dark: '#0f172a',   // Slate 900
-                        card: '#1e293b',   // Slate 800
+                        primary: '#6366f1',
+                        dark: '#0f172a',
+                        danger: '#7f1d1d', // Red 900
                     },
                     animation: {
                         'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                         'pop': 'pop 0.2s ease-out',
                         'fade-in': 'fadeIn 0.5s ease-out',
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                        'slide-down-toast': 'slideDownToast 0.5s ease-out forwards',
                     },
                     keyframes: {
-                        slideUp: {
-                            '0%': { transform: 'translateY(100%)' },
-                            '100%': { transform: 'translateY(0)' },
-                        },
-                        pop: {
-                            '0%': { transform: 'scale(0.95)', opacity: '0.5' },
-                            '100%': { transform: 'scale(1)', opacity: '1' },
-                        },
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
+                        slideUp: { '0%': { transform: 'translateY(100%)' }, '100%': { transform: 'translateY(0)' } },
+                        pop: { '0%': { transform: 'scale(0.95)', opacity: '0.5' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideDownToast: { '0%': { transform: 'translateY(-150%)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        shake: {
+                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
                         }
                     }
                 }
@@ -51,9 +50,9 @@
         }
     </script>
     <style>
+        /* Smooth theme transition for the whole page */
         body {
-            background-color: #0f172a;
-            color: white;
+            transition: background-color 0.7s ease, color 0.5s ease;
         }
 
         .glass {
@@ -62,10 +61,26 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .gradient-text {
-            background: linear-gradient(135deg, #818cf8, #c084fc);
-            -webkit-background-clip: text;
-            color: transparent;
+        /* Danger Theme Overrides */
+        body.danger-mode {
+            background-color: #450a0a;
+            /* Red 950 */
+        }
+
+        body.danger-mode .glass {
+            background: rgba(69, 10, 10, 0.8);
+            border: 1px solid rgba(255, 80, 80, 0.2);
+        }
+
+        body.danger-mode .card-bg {
+            background-color: #7f1d1d;
+        }
+
+        /* Red 900 */
+        body.danger-mode .input-bg {
+            background-color: #2b0808;
+            border-color: #ef4444;
+            color: #fca5a5;
         }
 
         .hide-scroll::-webkit-scrollbar {
@@ -74,96 +89,105 @@
     </style>
 </head>
 
-<body class="antialiased min-h-screen pb-32">
+<body id="appBody" class="bg-slate-900 text-white antialiased min-h-screen pb-32">
+
+    <!-- SWAHILI WARNING TOAST (Hidden by default) -->
+    <div id="warningToast" class="fixed top-4 left-4 right-4 z-50 hidden">
+        <div
+            class="bg-red-600 text-white px-4 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-down-toast border border-red-400">
+            <div class="bg-white/20 p-2 rounded-full animate-pulse">
+                <span class="material-icons-round">warning</span>
+            </div>
+            <div>
+                <h4 class="font-bold text-sm uppercase tracking-wide">Tahadhari!</h4>
+                <p class="text-sm">Pesa imeisha, unaingia kwa deni!</p>
+            </div>
+        </div>
+    </div>
 
     <!-- HEADER -->
-    <div
-        class="sticky top-0 z-30 bg-dark/80 backdrop-blur-md px-6 py-4 flex justify-between items-center border-b border-white/5">
+    <div class="sticky top-0 z-30 bg-opacity-80 backdrop-blur-md px-6 py-4 flex justify-between items-center border-b border-white/5 transition-colors duration-500"
+        id="headerEl">
         <div>
-            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Daily Tracker</p>
-            <h1 class="text-xl font-bold gradient-text">Expense Manager</h1>
+            <p class="text-xs opacity-60 font-semibold uppercase tracking-wider">Daily Tracker</p>
+            <h1 class="text-xl font-bold" id="appTitle">Expense Manager</h1>
         </div>
         <div
-            class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 shadow-lg">
-            <span class="material-icons-round text-primary">account_circle</span>
+            class="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center border border-white/10 shadow-lg">
+            <span class="material-icons-round text-white">account_circle</span>
         </div>
     </div>
 
     <div class="max-w-md mx-auto p-5 space-y-6">
 
         <!-- CONFIG CARD -->
-        <div class="glass rounded-3xl p-1 shadow-lg">
-            <div class="bg-slate-900/50 rounded-[20px] p-4 space-y-3">
+        <div class="glass rounded-3xl p-1 shadow-lg transition-all duration-500">
+            <div class="bg-black/20 rounded-[20px] p-4 space-y-3">
                 <div class="relative">
-                    <span class="material-icons-round absolute left-3 top-3.5 text-slate-500">contact_phone</span>
+                    <span class="material-icons-round absolute left-3 top-3.5 opacity-50">contact_phone</span>
                     <input id="whatsappNumber"
-                        class="w-full bg-slate-800 text-white pl-10 pr-4 py-3 rounded-xl border border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                        class="w-full bg-transparent pl-10 pr-4 py-3 rounded-xl border border-white/10 focus:border-white/40 outline-none transition-all placeholder-white/30"
                         value="+254762634893">
                 </div>
                 <div class="relative">
-                    <span
-                        class="material-icons-round absolute left-3 top-3.5 text-slate-500">account_balance_wallet</span>
+                    <span class="material-icons-round absolute left-3 top-3.5 opacity-50">account_balance_wallet</span>
                     <input id="amountReceived" type="number"
-                        class="w-full bg-slate-800 text-white pl-10 pr-4 py-3 rounded-xl border border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                        class="w-full bg-transparent pl-10 pr-4 py-3 rounded-xl border border-white/10 focus:border-white/40 outline-none transition-all placeholder-white/30"
                         placeholder="Total Cash Received">
                 </div>
             </div>
         </div>
 
         <!-- MAIN BALANCE CARD -->
-        <div class="relative overflow-hidden rounded-3xl p-6 shadow-2xl animate-fade-in group">
-            <div
-                class="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-700 transition-all duration-500 group-hover:scale-105">
-            </div>
+        <div id="balanceCard"
+            class="relative overflow-hidden rounded-3xl p-6 shadow-2xl animate-fade-in group bg-gradient-to-br from-indigo-600 to-purple-700 transition-all duration-700">
+            <!-- Dynamic Background Blobs -->
             <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
 
             <div class="relative z-10">
-                <p class="text-indigo-100 text-sm font-medium">Remaining Balance</p>
+                <p class="text-white/70 text-sm font-medium">Remaining Balance</p>
                 <div class="flex items-baseline gap-1 mt-1">
-                    <span class="text-3xl font-bold" id="balanceDisplay">0</span>
+                    <span class="text-3xl font-bold transition-colors duration-300" id="balanceDisplay">0</span>
                     <span class="text-sm font-medium opacity-70">KES</span>
                 </div>
 
                 <div class="mt-4 flex justify-between items-end">
                     <div>
-                        <p class="text-xs text-indigo-200 uppercase tracking-widest">Total Spent</p>
+                        <p class="text-xs text-white/60 uppercase tracking-widest">Total Spent</p>
                         <p class="text-lg font-bold" id="spentDisplay">0</p>
                     </div>
-                    <div class="h-10 w-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                        <span class="material-icons-round text-white">analytics</span>
+                    <div id="iconContainer"
+                        class="h-10 w-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-500">
+                        <span class="material-icons-round text-white" id="statusIcon">analytics</span>
                     </div>
                 </div>
 
                 <!-- Progress Bar -->
                 <div class="mt-4 h-1.5 bg-black/20 rounded-full overflow-hidden">
-                    <div id="progressBar"
-                        class="h-full bg-green-400 w-0 transition-all duration-1000 shadow-[0_0_10px_rgba(74,222,128,0.7)]">
-                    </div>
+                    <div id="progressBar" class="h-full bg-green-400 w-0 transition-all duration-1000"></div>
                 </div>
             </div>
         </div>
 
         <!-- ADD ITEM SECTION -->
         <div class="space-y-3">
-            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider ml-1">New Transaction</h3>
+            <h3 class="text-sm font-bold opacity-50 uppercase tracking-wider ml-1">New Transaction</h3>
             <div class="flex gap-2 relative z-20">
                 <div class="relative flex-1 group">
                     <input id="itemName"
-                        class="w-full bg-card h-14 pl-4 pr-4 rounded-2xl border border-slate-700 focus:border-accent outline-none text-white transition-all placeholder:text-slate-500"
+                        class="w-full bg-white/5 h-14 pl-4 pr-4 rounded-2xl border border-white/10 focus:border-white/40 outline-none text-white transition-all placeholder:text-slate-500"
                         placeholder="Item Name">
-
-                    <!-- Suggestions Dropdown -->
                     <ul id="suggestions"
                         class="absolute top-full left-0 w-full bg-slate-800 border border-slate-700 rounded-xl mt-2 shadow-2xl hidden overflow-hidden z-30 max-h-40 overflow-y-auto">
                     </ul>
                 </div>
 
                 <input id="itemPrice" type="number"
-                    class="w-24 bg-card h-14 px-3 rounded-2xl border border-slate-700 focus:border-accent outline-none text-white text-center font-bold"
+                    class="w-24 bg-white/5 h-14 px-3 rounded-2xl border border-white/10 focus:border-white/40 outline-none text-white text-center font-bold"
                     placeholder="0.00">
 
-                <button onclick="addItem()"
-                    class="h-14 w-14 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white shadow-lg active:scale-90 transition-transform hover:shadow-purple-500/30">
+                <button onclick="addItem()" id="addBtn"
+                    class="h-14 w-14 bg-white text-indigo-900 rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-transform hover:shadow-indigo-500/30">
                     <span class="material-icons-round">add</span>
                 </button>
             </div>
@@ -172,78 +196,78 @@
         <!-- CURRENT ITEMS LIST -->
         <div class="space-y-3">
             <div class="flex justify-between items-center px-1">
-                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Current Items</h3>
-                <span id="itemCount" class="bg-slate-800 text-xs px-2 py-0.5 rounded text-slate-400">0</span>
+                <h3 class="text-sm font-bold opacity-50 uppercase tracking-wider">Current Items</h3>
+                <span id="itemCount" class="bg-white/10 text-xs px-2 py-0.5 rounded opacity-70">0</span>
             </div>
             <ul id="itemsList" class="space-y-3 pb-4">
-                <div class="text-center py-8 text-slate-600 italic text-sm">No items added yet...</div>
+                <div class="text-center py-8 opacity-40 italic text-sm">No items added yet...</div>
             </ul>
         </div>
 
-        <!-- HISTORY SECTION (NEW) -->
-        <div class="pt-6 border-t border-slate-800">
-            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+        <!-- HISTORY SECTION -->
+        <div class="pt-6 border-t border-white/10">
+            <h3 class="text-sm font-bold opacity-50 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <span class="material-icons-round text-base">history</span> History Logs
             </h3>
-
-            <div id="historyList" class="grid grid-cols-1 gap-3">
-                <!-- History items injected here -->
-            </div>
+            <div id="historyList" class="grid grid-cols-1 gap-3"></div>
         </div>
 
     </div>
 
     <!-- SAVE FLOATING BUTTON -->
-    <button onclick="saveCurrentReport()"
+    <button onclick="saveCurrentReport()" id="saveBtn"
         class="fixed bottom-6 right-6 z-40 bg-white text-indigo-900 px-6 py-4 rounded-full shadow-[0_10px_40px_-10px_rgba(255,255,255,0.4)] flex items-center gap-3 font-bold text-lg active:scale-95 transition-all animate-pop">
         <span class="material-icons-round">save_alt</span>
         Finish & Save
     </button>
 
     <!-- FULL SIZE DETAIL MODAL -->
-    <div id="detailModal" class="fixed inset-0 z-50 bg-dark hidden">
-        <div class="h-full w-full overflow-y-auto bg-dark animate-slide-up flex flex-col">
-
+    <div id="detailModal" class="fixed inset-0 z-50 bg-slate-900 hidden">
+        <div class="h-full w-full overflow-y-auto animate-slide-up flex flex-col bg-slate-900">
             <!-- Modal Header -->
             <div
-                class="sticky top-0 bg-dark/90 backdrop-blur-md px-6 py-4 border-b border-slate-800 flex justify-between items-center z-10">
+                class="sticky top-0 bg-slate-900/90 backdrop-blur-md px-6 py-4 border-b border-white/10 flex justify-between items-center z-10">
                 <button onclick="closeModal()"
-                    class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center">
+                    class="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
                     <span class="material-icons-round text-white">arrow_back</span>
                 </button>
                 <h2 class="text-lg font-bold">Report Details</h2>
-                <div class="w-10"></div> <!-- Spacer -->
+                <div class="w-10"></div>
             </div>
 
             <!-- Modal Content -->
             <div class="p-6 space-y-6 flex-1">
-
                 <div class="text-center space-y-1">
                     <p class="text-slate-400 text-sm" id="modalDate">Date</p>
                     <h1 class="text-3xl font-bold text-white" id="modalTotal">0</h1>
                     <p class="text-xs text-slate-500 uppercase tracking-widest">Total Received</p>
+
+                    <!-- Negative Warning Badge in Modal -->
+                    <div id="modalWarningBadge"
+                        class="hidden mt-2 inline-block bg-red-500/20 text-red-400 border border-red-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                        ⚠️ Over Budget
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
                         <p class="text-xs text-slate-400">Spent</p>
                         <p class="text-xl font-bold text-red-400" id="modalSpent">0</p>
                     </div>
-                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
                         <p class="text-xs text-slate-400">Balance</p>
-                        <p class="text-xl font-bold text-green-400" id="modalBalance">0</p>
+                        <p class="text-xl font-bold" id="modalBalance">0</p>
                     </div>
                 </div>
 
-                <div class="bg-slate-800/50 rounded-3xl p-1">
+                <div class="bg-white/5 rounded-3xl p-1">
                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest p-4">Item Breakdown</h3>
                     <div id="modalItems" class="space-y-1 p-2"></div>
                 </div>
-
             </div>
 
             <!-- Modal Footer -->
-            <div class="p-6 bg-dark border-t border-slate-800">
+            <div class="p-6 bg-slate-900 border-t border-white/10">
                 <button onclick="sendModalToWhatsApp()"
                     class="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 transition-all active:scale-95">
                     <span class="material-icons-round">whatsapp</span>
@@ -254,16 +278,21 @@
     </div>
 
     <script>
-        /* ================= DATA & STATE ================= */
+        /* ================= STATE & DOM ================= */
         let currentItems = JSON.parse(localStorage.getItem("currentItems")) || [];
         let history = JSON.parse(localStorage.getItem("reportHistory")) || [];
-
-        // Use a set for suggestions to avoid duplicates
         let suggestions = new Set(JSON.parse(localStorage.getItem("suggestions")) || []);
 
-        /* ================= DOM ELEMENTS ================= */
         const els = {
-            whatsapp: document.getElementById('whatsappNumber'),
+            body: document.getElementById('appBody'),
+            balanceCard: document.getElementById('balanceCard'),
+            addBtn: document.getElementById('addBtn'),
+            saveBtn: document.getElementById('saveBtn'),
+            statusIcon: document.getElementById('statusIcon'),
+            iconContainer: document.getElementById('iconContainer'),
+            warningToast: document.getElementById('warningToast'),
+
+            // Inputs & Displays
             received: document.getElementById('amountReceived'),
             balance: document.getElementById('balanceDisplay'),
             spent: document.getElementById('spentDisplay'),
@@ -273,35 +302,73 @@
             list: document.getElementById('itemsList'),
             suggBox: document.getElementById('suggestions'),
             historyList: document.getElementById('historyList'),
-            modal: document.getElementById('detailModal'),
 
-            // Modal fields
+            // Modal
+            modal: document.getElementById('detailModal'),
             mDate: document.getElementById('modalDate'),
             mTotal: document.getElementById('modalTotal'),
             mSpent: document.getElementById('modalSpent'),
             mBalance: document.getElementById('modalBalance'),
-            mItems: document.getElementById('modalItems')
+            mItems: document.getElementById('modalItems'),
+            mBadge: document.getElementById('modalWarningBadge')
         };
 
-        let activeReport = null; // Stores data for the modal
+        let activeReport = null;
 
-        /* ================= INIT ================= */
+        // Init
         renderCurrent();
         renderHistory();
 
-        /* ================= LOGIC: CURRENT SESSION ================= */
+        /* ================= THEME LOGIC ================= */
+        function checkTheme(balance) {
+            if (balance < 0) {
+                // ACTIVATE DANGER MODE
+                els.body.classList.add('danger-mode');
+                els.balanceCard.classList.remove('from-indigo-600', 'to-purple-700');
+                els.balanceCard.classList.add('from-red-600', 'to-red-900');
+
+                els.statusIcon.textContent = "warning";
+                els.iconContainer.classList.add('bg-red-500', 'animate-pulse');
+
+                els.saveBtn.classList.add('text-red-900');
+                els.saveBtn.classList.remove('text-indigo-900');
+
+                els.addBtn.classList.add('text-red-900');
+                els.addBtn.classList.remove('text-indigo-900');
+
+                els.progress.classList.remove('bg-green-400');
+                els.progress.classList.add('bg-red-500');
+
+            } else {
+                // NORMAL MODE
+                els.body.classList.remove('danger-mode');
+                els.balanceCard.classList.add('from-indigo-600', 'to-purple-700');
+                els.balanceCard.classList.remove('from-red-600', 'to-red-900');
+
+                els.statusIcon.textContent = "analytics";
+                els.iconContainer.classList.remove('bg-red-500', 'animate-pulse');
+
+                els.saveBtn.classList.remove('text-red-900');
+                els.saveBtn.classList.add('text-indigo-900');
+
+                els.addBtn.classList.remove('text-red-900');
+                els.addBtn.classList.add('text-indigo-900');
+
+                els.progress.classList.add('bg-green-400');
+                els.progress.classList.remove('bg-red-500');
+            }
+        }
+
+        /* ================= CORE FUNCTIONS ================= */
         function addItem() {
             const name = els.nameIn.value.trim();
             const price = Number(els.priceIn.value);
 
-            if (!name || price <= 0) {
-                // Shake effect logic could go here
-                return;
-            }
+            if (!name || price <= 0) return;
 
-            currentItems.push({ name, price, id: Date.now() });
+            const newItem = { name, price, id: Date.now() };
+            currentItems.push(newItem);
 
-            // Add to suggestions
             suggestions.add(name);
             localStorage.setItem("suggestions", JSON.stringify([...suggestions]));
 
@@ -310,7 +377,8 @@
             els.suggBox.classList.add("hidden");
 
             saveCurrentState();
-            renderCurrent();
+            // Pass true to indicate a new item was added (for highlighting)
+            renderCurrent(true);
         }
 
         function deleteItem(id) {
@@ -323,55 +391,137 @@
             localStorage.setItem("currentItems", JSON.stringify(currentItems));
         }
 
-        function renderCurrent() {
+        function renderCurrent(isNewAdd = false) {
             const total = Number(els.received.value) || 0;
             const spent = currentItems.reduce((sum, i) => sum + i.price, 0);
+            const balance = total - spent;
 
+            // Update Text
             els.spent.textContent = spent.toLocaleString();
-            els.balance.textContent = (total - spent).toLocaleString();
+            els.balance.textContent = balance.toLocaleString();
 
-            const pct = total === 0 ? 0 : Math.min((spent / total) * 100, 100);
+            // Progress Bar Logic
+            let pct = total === 0 ? 0 : (spent / total) * 100;
+            if (balance < 0) pct = 100; // Full bar if over budget
             els.progress.style.width = `${pct}%`;
-            els.progress.className = `h-full transition-all duration-1000 shadow-[0_0_10px_rgba(255,255,255,0.5)] ${pct > 90 ? 'bg-red-500' : 'bg-green-400'}`;
 
+            // Theme & Warning Check
+            checkTheme(balance);
+
+            // Warning Modal Logic
+            if (balance < 0 && isNewAdd) {
+                showSwahiliWarning();
+            }
+
+            // List Render
             if (currentItems.length === 0) {
-                els.list.innerHTML = '<div class="text-center py-8 text-slate-600 italic text-sm">No items added yet...</div>';
+                els.list.innerHTML = '<div class="text-center py-8 opacity-40 italic text-sm">No items added yet...</div>';
             } else {
-                els.list.innerHTML = currentItems.map(item => `
-                    <li class="bg-slate-800 p-4 rounded-2xl flex justify-between items-center border border-slate-700 animate-pop">
+                // Get last item ID if new add
+                const lastId = currentItems[currentItems.length - 1].id;
+
+                els.list.innerHTML = currentItems.map(item => {
+                    // Check if this is the item causing trouble (last added) AND we are in debt
+                    const isTroubleItem = (isNewAdd && balance < 0 && item.id === lastId);
+
+                    return `
+                    <li class="bg-white/5 p-4 rounded-2xl flex justify-between items-center border border-white/5 transition-all duration-500 
+                        ${isTroubleItem ? 'border-red-500 ring-2 ring-red-500/50 bg-red-900/20 animate-shake' : ''}">
                         <div class="flex items-center gap-3">
-                            <div class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-400">
+                            <div class="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold opacity-70">
                                 ${item.name.charAt(0).toUpperCase()}
                             </div>
-                            <span class="font-medium text-slate-200">${item.name}</span>
+                            <span class="font-medium opacity-90">${item.name}</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="font-bold text-white">${item.price}</span>
+                            <span class="font-bold">${item.price}</span>
                             <button onclick="deleteItem(${item.id})" class="text-red-400 hover:text-red-300">
                                 <span class="material-icons-round text-sm">close</span>
                             </button>
                         </div>
                     </li>
-                `).join('');
+                `}).join('');
             }
         }
 
-        // Suggestions Logic
-        els.nameIn.addEventListener('input', (e) => {
-            const val = e.target.value.toLowerCase();
-            if (!val) {
-                els.suggBox.classList.add('hidden');
+        function showSwahiliWarning() {
+            els.warningToast.classList.remove('hidden');
+            // Auto hide after 4 seconds
+            setTimeout(() => {
+                els.warningToast.classList.add('hidden');
+            }, 4000);
+        }
+
+        els.received.addEventListener('input', () => renderCurrent(false));
+
+        /* ================= HISTORY & SAVING ================= */
+        function saveCurrentReport() {
+            if (currentItems.length === 0) return alert("Add items first!");
+
+            const totalRec = Number(els.received.value) || 0;
+            const spent = currentItems.reduce((sum, i) => sum + i.price, 0);
+            const balance = totalRec - spent;
+
+            const report = {
+                id: Date.now(),
+                date: new Date().toLocaleString(),
+                totalReceived: totalRec,
+                totalSpent: spent,
+                balance: balance,
+                items: [...currentItems],
+                isDeficit: balance < 0 // Flag for negative money
+            };
+
+            history.unshift(report);
+            localStorage.setItem("reportHistory", JSON.stringify(history));
+
+            // Reset
+            currentItems = [];
+            els.received.value = "";
+            saveCurrentState();
+            renderCurrent(); // Resets theme
+            renderHistory();
+
+            openModal(report.id);
+        }
+
+        function renderHistory() {
+            if (history.length === 0) {
+                els.historyList.innerHTML = '<div class="opacity-40 text-sm text-center py-4">No saved reports found.</div>';
                 return;
             }
+
+            document.getElementById('historyList').innerHTML = history.map(h => `
+                <div onclick="openModal(${h.id})" class="bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-white/20 transition-all cursor-pointer active:scale-98 relative overflow-hidden">
+                    ${h.isDeficit ? '<div class="absolute top-0 right-0 bg-red-600 text-[10px] font-bold px-2 py-0.5 rounded-bl-xl text-white">OVER SPENT</div>' : ''}
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="text-xs opacity-50 font-medium">${h.date}</p>
+                            <p class="text-sm font-bold mt-1">${h.items.length} Items</p>
+                        </div>
+                        <span class="material-icons-round opacity-50">chevron_right</span>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                         <span class="bg-red-500/10 text-red-400 text-xs px-2 py-1 rounded font-mono">-${h.totalSpent}</span>
+                         <span class="bg-white/10 ${h.balance < 0 ? 'text-red-400' : 'text-green-400'} text-xs px-2 py-1 rounded font-mono">
+                            ${h.balance < 0 ? 'Deficit: ' : 'Bal: '} ${h.balance}
+                         </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /* ================= SUGGESTIONS ================= */
+        els.nameIn.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            if (!val) { els.suggBox.classList.add('hidden'); return; }
             const matches = [...suggestions].filter(s => s.toLowerCase().includes(val));
             if (matches.length > 0) {
                 els.suggBox.innerHTML = matches.map(s => `
-                    <li onclick="selectSuggestion('${s}')" class="px-4 py-3 hover:bg-slate-700 cursor-pointer text-slate-300 border-b border-slate-700 last:border-0 transition-colors">${s}</li>
+                    <li onclick="selectSuggestion('${s}')" class="px-4 py-3 hover:bg-slate-700 cursor-pointer text-slate-300 border-b border-slate-700 last:border-0">${s}</li>
                 `).join('');
                 els.suggBox.classList.remove('hidden');
-            } else {
-                els.suggBox.classList.add('hidden');
-            }
+            } else { els.suggBox.classList.add('hidden'); }
         });
 
         window.selectSuggestion = (val) => {
@@ -380,107 +530,53 @@
             els.priceIn.focus();
         };
 
-        // Update calculations on input change
-        els.received.addEventListener('input', renderCurrent);
-
-
-        /* ================= LOGIC: HISTORY SYSTEM ================= */
-
-        function saveCurrentReport() {
-            if (currentItems.length === 0) return alert("Add items first!");
-            const totalRec = Number(els.received.value) || 0;
-            const spent = currentItems.reduce((sum, i) => sum + i.price, 0);
-
-            const report = {
-                id: Date.now(),
-                date: new Date().toLocaleString(),
-                totalReceived: totalRec,
-                totalSpent: spent,
-                balance: totalRec - spent,
-                items: [...currentItems]
-            };
-
-            // Add to history
-            history.unshift(report); // Add to top
-            localStorage.setItem("reportHistory", JSON.stringify(history));
-
-            // Clear current
-            currentItems = [];
-            els.received.value = "";
-            saveCurrentState();
-            renderCurrent();
-            renderHistory();
-
-            // Open the modal for the new item immediately
-            openModal(report.id);
-        }
-
-        function renderHistory() {
-            if (history.length === 0) {
-                els.historyList.innerHTML = '<div class="text-slate-600 text-sm text-center py-4">No saved reports found.</div>';
-                return;
-            }
-
-            els.historyList.innerHTML = history.map(h => `
-                <div onclick="openModal(${h.id})" class="bg-card p-4 rounded-2xl border border-slate-700 hover:border-primary transition-all cursor-pointer active:scale-98">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <p class="text-xs text-slate-400 font-medium">${h.date}</p>
-                            <p class="text-sm font-bold text-white mt-1">${h.items.length} Items Recorded</p>
-                        </div>
-                        <span class="material-icons-round text-slate-600">chevron_right</span>
-                    </div>
-                    <div class="flex gap-2 mt-2">
-                         <span class="bg-red-500/10 text-red-400 text-xs px-2 py-1 rounded font-mono">-${h.totalSpent}</span>
-                         <span class="bg-green-500/10 text-green-400 text-xs px-2 py-1 rounded font-mono">bal: ${h.balance}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        /* ================= LOGIC: MODAL & WHATSAPP ================= */
-
+        /* ================= MODAL ================= */
         window.openModal = (id) => {
             activeReport = history.find(h => h.id === id);
             if (!activeReport) return;
 
-            // Populate Modal
             els.mDate.textContent = activeReport.date;
             els.mTotal.textContent = activeReport.totalReceived.toLocaleString();
             els.mSpent.textContent = activeReport.totalSpent.toLocaleString();
-            els.mBalance.textContent = activeReport.balance.toLocaleString();
+
+            const bal = activeReport.balance;
+            els.mBalance.textContent = bal.toLocaleString();
+            els.mBalance.className = `text-xl font-bold ${bal < 0 ? 'text-red-400' : 'text-green-400'}`;
+
+            // Show/Hide Warning Badge inside Modal
+            if (activeReport.isDeficit) els.mBadge.classList.remove('hidden');
+            else els.mBadge.classList.add('hidden');
 
             els.mItems.innerHTML = activeReport.items.map(i => `
-                <div class="flex justify-between p-3 bg-slate-700/50 rounded-xl mb-1">
-                    <span class="text-slate-300">${i.name}</span>
-                    <span class="font-bold text-white">${i.price}</span>
+                <div class="flex justify-between p-3 bg-white/5 rounded-xl mb-1 border-b border-white/5">
+                    <span class="opacity-80">${i.name}</span>
+                    <span class="font-bold">${i.price}</span>
                 </div>
             `).join('');
 
             els.modal.classList.remove('hidden');
         };
 
-        window.closeModal = () => {
-            els.modal.classList.add('hidden');
-        };
+        window.closeModal = () => els.modal.classList.add('hidden');
 
         window.sendModalToWhatsApp = () => {
             if (!activeReport) return;
             const number = els.whatsapp.value.replace(/\D/g, "");
 
-            let msg = `*📅 REPORT: ${activeReport.date}*\n`;
+            // Clean report - No "hints" about overspending, just raw numbers
+            let msg = `*📅 EXPENSE REPORT*\n`;
+            msg += `_${activeReport.date}_\n`;
             msg += `------------------\n`;
             activeReport.items.forEach(i => {
                 msg += `▫️ ${i.name}: ${i.price}\n`;
             });
             msg += `------------------\n`;
-            msg += `💰 Rec: ${activeReport.totalReceived}\n`;
-            msg += `📉 Spent: ${activeReport.totalSpent}\n`;
-            msg += `✅ Bal: ${activeReport.balance}`;
+            msg += `💰 Received: ${activeReport.totalReceived}\n`;
+            msg += `📉 Total Spent: ${activeReport.totalSpent}\n`;
+            msg += `✅ Balance: ${activeReport.balance}`;
 
             window.open(`https://wa.me/${number}?text=${encodeURIComponent(msg)}`);
         };
-
     </script>
 </body>
 
