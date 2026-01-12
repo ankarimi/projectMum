@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Daily Expenses</title>
+
+    <!-- Google Fonts: Roboto for Material Design -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Config for Animations & Material Colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                fontFamily: {
+                    sans: ['Roboto', 'sans-serif'],
+                },
+                extend: {
+                    colors: {
+                        md: {
+                            primary: '#006494',
+                            onPrimary: '#ffffff',
+                            primaryContainer: '#cbe6ff',
+                            surface: '#f8f9ff',
+                            surfaceVariant: '#e1e2e6',
+                            outline: '#74777f',
+                            error: '#ba1a1a',
+                        }
+                    },
+                    animation: {
+                        'slide-up': 'slideUp 0.4s cubic-bezier(0.2, 0, 0.2, 1)',
+                        'fade-in': 'fadeIn 0.3s ease-in',
+                        'scale-in': 'scaleIn 0.2s cubic-bezier(0.2, 0, 0.2, 1)',
+                        'progress': 'progress 1s ease-out forwards',
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.9)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        progress: {
+                            '0%': { width: '0%' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Hide scrollbar for clean UI */
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Floating Label Logic */
+        .peer:placeholder-shown~.floating-label {
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            color: #74777f;
+        }
+
+        .peer:focus~.floating-label,
+        .peer:not(:placeholder-shown)~.floating-label {
+            top: -6px;
+            font-size: 0.75rem;
+            color: #006494;
+            background-color: white;
+            padding: 0 4px;
+        }
+
+        /* Ripple Effect */
+        .ripple {
+            position: relative;
+            overflow: hidden;
+            transform: translate3d(0, 0, 0);
+        }
+
+        .ripple:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform .5s, opacity 1s;
+        }
+
+        .ripple:active:after {
+            transform: scale(0, 0);
+            opacity: 0.2;
+            transition: 0s;
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-md-surface text-gray-800 antialiased min-h-screen pb-24">
+
+    <!-- Top App Bar -->
+    <div
+        class="sticky top-0 z-50 bg-md-surface/90 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-sm transition-all duration-300">
+        <div class="flex items-center gap-3">
+            <div class="bg-md-primaryContainer text-md-primary p-2 rounded-xl">
+                <span class="material-icons-round text-xl">account_balance_wallet</span>
+            </div>
+            <h1 class="text-xl font-medium tracking-wide">Daily Expense</h1>
+        </div>
+        <button
+            class="material-icons-round text-gray-500 p-2 rounded-full hover:bg-gray-200 transition-colors">more_vert</button>
+    </div>
+
+    <div class="max-w-md mx-auto p-4 space-y-6 animate-slide-up">
+
+        <!-- 1. Configuration Card -->
+        <div class="bg-white rounded-[20px] p-5 shadow-sm border border-gray-100">
+            <div class="flex items-center gap-2 mb-4 text-gray-500 text-sm font-medium uppercase tracking-wider">
+                <span class="material-icons-round text-base">settings</span> Configuration
+            </div>
+
+            <div class="relative mb-6">
+                <input id="whatsappNumber" type="tel" value="+254762634893"
+                    class="peer w-full h-14 px-4 border border-gray-300 rounded-xl outline-none focus:border-md-primary focus:border-2 transition-all placeholder-transparent bg-transparent"
+                    placeholder="WhatsApp Number" />
+                <label for="whatsappNumber"
+                    class="floating-label absolute left-3 transition-all duration-200 pointer-events-none">WhatsApp
+                    Number</label>
+            </div>
+
+            <div class="relative">
+                <input id="amountReceived" type="number"
+                    class="peer w-full h-14 px-4 border border-gray-300 rounded-xl outline-none focus:border-md-primary focus:border-2 transition-all placeholder-transparent bg-transparent font-semibold text-lg"
+                    placeholder="Amount" />
+                <label for="amountReceived"
+                    class="floating-label absolute left-3 transition-all duration-200 pointer-events-none">Amount
+                    Received (Cash)</label>
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">KES</div>
+            </div>
+        </div>
+
+        <!-- 2. Dashboard / Summary Card (Gradient) -->
+        <div
+            class="relative overflow-hidden bg-gradient-to-br from-[#006494] to-[#004a73] rounded-[24px] p-6 text-white shadow-lg shadow-blue-200 transition-transform active:scale-[0.99] duration-300">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full -ml-8 -mb-8"></div>
+
+            <div class="flex justify-between items-start mb-6 relative z-10">
+                <div>
+                    <p class="text-blue-100 text-sm font-medium">Remaining Balance</p>
+                    <h2 class="text-4xl font-bold mt-1 tracking-tight" id="balanceDisplay">0</h2>
+                </div>
+                <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
+                    <span class="material-icons-round text-blue-100">analytics</span>
+                </div>
+            </div>
+
+            <div class="space-y-2 relative z-10">
+                <div class="flex justify-between text-xs text-blue-100 mb-1">
+                    <span>Spent</span>
+                    <span id="spentDisplay">0</span>
+                </div>
+                <div class="h-2 w-full bg-black/20 rounded-full overflow-hidden">
+                    <div id="progressBar"
+                        class="h-full bg-green-400 rounded-full w-0 transition-all duration-1000 ease-out"></div>
+                </div>
+                <div class="flex justify-end text-[10px] text-blue-200 mt-1">
+                    Total: <span id="totalDisplay" class="ml-1">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Add Item Area -->
+        <div class="bg-white rounded-[20px] p-1 shadow-sm border border-gray-100 flex items-center gap-2 pr-2">
+            <div class="flex-1 grid grid-cols-5 gap-2 p-2">
+                <div class="col-span-3 relative">
+                    <input id="itemName" list="suggestions"
+                        class="w-full h-12 px-4 bg-gray-50 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-md-primary/20 transition-all text-sm"
+                        placeholder="Item Name..." />
+                    <datalist id="suggestions">
+                        <option value="Lunch">
+                        <option value="Transport">
+                        <option value="Airtime">
+                        <option value="Fuel">
+                        <option value="Supplies">
+                    </datalist>
+                </div>
+                <div class="col-span-2 relative">
+                    <input id="itemPrice" type="number"
+                        class="w-full h-12 px-4 bg-gray-50 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-md-primary/20 transition-all text-sm"
+                        placeholder="Price" />
+                </div>
+            </div>
+            <button onclick="addItem()"
+                class="ripple h-12 w-12 bg-md-primary rounded-xl flex items-center justify-center text-white shadow-md hover:shadow-lg hover:bg-[#004a73] transition-all active:scale-90">
+                <span class="material-icons-round">add</span>
+            </button>
+        </div>
+
+        <!-- 4. Items List -->
+        <div>
+            <div class="flex justify-between items-center mb-2 px-2">
+                <h3 class="text-gray-500 text-sm font-medium uppercase">Transactions</h3>
+                <span id="itemCount" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">0</span>
+            </div>
+            <ul id="itemsList" class="space-y-3 min-h-[100px]">
+                <!-- Empty State -->
+                <li id="emptyState" class="flex flex-col items-center justify-center py-8 text-gray-400">
+                    <span class="material-icons-round text-4xl mb-2 opacity-20">receipt_long</span>
+                    <span class="text-sm">No items added yet</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Output Area (Hidden by default, shows on generate) -->
+        <div class="relative group">
+            <textarea id="messageBox"
+                class="w-full bg-gray-50 border-0 rounded-xl p-4 text-sm text-gray-600 focus:ring-0 resize-none transition-all h-24 opacity-60 hover:opacity-100"
+                placeholder="Report preview will appear here..." readonly></textarea>
+            <div class="absolute top-2 right-2">
+                <button onclick="copyToClipboard()" class="p-1 text-gray-400 hover:text-md-primary transition-colors"
+                    title="Copy">
+                    <span class="material-icons-round text-sm">content_copy</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 5. Floating Action Button (FAB) for Generate -->
+    <div class="fixed bottom-6 right-6 z-40">
+        <button onclick="generateMessage()"
+            class="ripple group flex items-center gap-2 bg-md-primaryContainer text-md-primary pl-4 pr-5 py-4 rounded-[16px] shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+            <span class="material-icons-round group-hover:rotate-12 transition-transform">whatsapp</span>
+            <span class="font-bold">Generate Report</span>
+        </button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
